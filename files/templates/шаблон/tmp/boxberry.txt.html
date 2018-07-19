@@ -1,0 +1,85 @@
+<script type="text/javascript" src="//points.boxberry.ru/js/boxberry.js"></script>
+<a href="javascript:void(0);" class="boxberry_choose_hiden" onclick="boxberry.open(box_callback,'{$smarty.const.MODULE_SHIPPING_BOXBERRYRF_APIKEY}','{$smarty.const.MODULE_SHIPPING_BOXBERRYRF_CURRENTCITY}','', {$smarty.const.MODULE_SHIPPING_BOXBERRYRF_RESALT_SUM}, {$smarty.const.MODULE_SHIPPING_BOXBERRYRF_RESALT_TOTAL_WEIGHT}, 0, {$smarty.const.MODULE_SHIPPING_BOXBERRYRF_RESALT_HEIGHT}, {$smarty.const.MODULE_SHIPPING_BOXBERRYRF_RESALT_WIDTH}, {$smarty.const.MODULE_SHIPPING_BOXBERRYRF_RESALT_LENGTH}); "></a>
+<!-- BEGIN CODE {literal} -->
+<script type="text/javascript">
+function objDump(object) {
+	var out = "";
+	if(object && typeof(object) == "object"){
+		for (var i in object) {out += i + ": " + object[i] + "\n";}
+	} else {
+		out = object;
+	}
+		//alert(out);
+		console.log(out);
+}
+
+var onbutton_text = '<br/><a href="javascript:void(0);" class="boxberry_close notclicked" onclick="$(\'.boxberry_choose_hiden\').trigger(\'click\');"><i class="fa fa-map-marker"></i> Выбрать пункт выдачи на карте</a>';
+
+function box_callback(result){
+						
+	var boxberry_resalt =  result.id + ' ' + result.address + ' ' + result.workschedule + ' ' + result.phone, 
+	boxberry_resalt_html =  '<p><img src="images/icons/boxberry.png" /></p>' + '<p> ' + result.id + ' <i class="fa fa-map-marker" aria-hidden="true"></i>' + result.address + '</p><p> ' + result.workschedule + ' <i class="fa fa-phone" aria-hidden="true"></i>' + result.phone+ '</p> ';
+	boxberry_resalt = boxberry_resalt.replace('NaN','');
+	boxberry_resalt_html = boxberry_resalt_html.replace('NaN','');
+
+	//objDump(result);
+	var plus_price = result.price;
+	if(plus_price){
+
+		$.ajax({
+			type: 'POST',
+			url: '{/literal}{$smarty.const.HTTP_MAIL_SERVER}{literal}checkout.php',
+			data: {nname:boxberry_resalt},
+			success: function(){
+				//console.log(r);
+				$.ajax({
+					type: 'POST',
+					url: '{/literal}{$smarty.const.HTTP_MAIL_SERVER}{literal}',
+					data: {boxberry_price_plus:plus_price},
+					success: function(r){
+						//console.log(r);
+						var url='checkout.php'; 
+						$('#shipping_options').load(url +' #shipping_options > *', {'shipping': $('input[name=shipping]:checked').val(),'payment': $('input[name=payment]:checked').val()}, function(){$('#shipping_modules_box').trigger('refresh');});
+					}
+				});
+			}
+			});
+		
+	}
+
+	$('#res_boxberry').html(boxberry_resalt_html);
+	$('input#boxberryrf').trigger('click');
+	$('.boxberry_container').remove();
+	on_button_text_text = onbutton_text = '<br/><a href="javascript:void(0);" class="boxberry_close notclicked" onclick="$(\'.boxberry_choose_hiden\').trigger(\'click\');"><i class="fa fa-map-marker"></i> Выбрать другой пункт выдачи</a>';
+
+}
+
+function click_text(){ $('#shipping_modules_box .click_text').html(onbutton_text); }
+
+$(document).ready(function() {
+	click_text();
+	$('#comment_box').after('<div class="boxberry_pvz_resalt"><div id="res_boxberry"></div></div>');
+	$("input#boxberryrf").click(function (){	
+		if($("div#res_boxberry").text() == ''){
+			$('.boxberry_close').trigger('click');
+		}
+	});
+});
+$(document).ajaxStop(function() {
+	click_text();
+	$("input#boxberryrf").click(function (){	
+		if($("div#res_boxberry").text() == ''){
+			$('.boxberry_close').trigger('click');
+		}
+	});
+	if ($("input#boxberryrf").is(":checked")) {
+	  $("div#res_boxberry").show();
+	} else {
+	  $("div#res_boxberry").hide();
+	}
+});
+</script>
+<style>
+.boxberry_close{border-bottom: 2px rgba(185, 185, 185, 0.31) dashed;padding-bottom: 3px;}
+</style>
+<!-- END CODE {/literal} -->
